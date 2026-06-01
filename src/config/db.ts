@@ -1,18 +1,12 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
-const connectDB = async () => {
-    try {
-        await mongoose
-    .connect(process.env.MONGODB_CONNECTION_STRING_URI || 'mongodb://localhost:27017/CVgenerator', {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-        })
-    .then(()=>(console.log("1MinuteQuiz Database connected with cloud")))
-    .catch((err)=>(console.log("Not conneted with database.")));
-    } catch (err) {
-        console.error(`Database connection error: ${err.message}`);
-        process.exit(1);
-    }
+export const connectDB = async (mongoUri: string): Promise<void> => {
+  try {
+    mongoose.set('strictQuery', true);
+    await mongoose.connect(mongoUri);
+    console.log('1MinuteQuiz Database connected successfully');
+  } catch (error) {
+    console.error('Database connection error:', error);
+    throw error;
+  }
 };
-
-module.exports = connectDB;

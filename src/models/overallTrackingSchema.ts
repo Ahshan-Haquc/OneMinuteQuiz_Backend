@@ -1,22 +1,30 @@
-const mongoose = require('mongoose');
+import { Document, model, Schema } from 'mongoose';
 
-const OverallTrackingSchema = new mongoose.Schema({
+export interface OverallTrackingDocument extends Document {
+  totalQuessTheWordGamePlayed: number;
+  totalQuickCalculateGamePlayed: number;
+  averageRating: number;
+}
+
+const overallTrackingSchema = new Schema<OverallTrackingDocument>(
+  {
     totalQuessTheWordGamePlayed: {
-        type: Number,
-        default: 0
+      type: Number,
+      default: 0,
     },
     totalQuickCalculateGamePlayed: {
-        type: Number,
-        default: 0
+      type: Number,
+      default: 0,
     },
     averageRating: {
-        type: Number,
-        default: 0,
-        min: 1,
-        max:5
-    }});
+      type: Number,
+      default: 0,
+      min: 1,
+      max: 5,
+    },
+  },
+  { timestamps: true },
+);
 
-    const OverallTracking = mongoose.model('OverallTrackingSchema', adminControlSchema);
-
-// Export the model
-module.exports = OverallTracking;
+export const OverallTracking = model<OverallTrackingDocument>('OverallTracking', overallTrackingSchema);
+export default OverallTracking;

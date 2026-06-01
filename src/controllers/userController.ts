@@ -1,93 +1,84 @@
-const User = require('../models/userSchema');
-const UserFeedback = require('../models/userFeedbackSchema');
-const userAccessPermission = require('../middleware/userAccessPermision'); 
-const mongoose = require('mongoose');
-const bcrypt = require("bcryptjs");
+import { NextFunction, Request, Response } from 'express';
+import bcrypt from 'bcryptjs';
+import User from '../models/userSchema';
+import { ApiError } from '../utils/ApiError';
 
-const login = async (req, res) => {
+export const login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { email, password } = req.body;
 
-    // 1. Find user
+    if (!email || !password) {
+      throw new ApiError(400, 'Email and password are required.');
+    }
+
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(401).json({ message: "Invalid credentials" });
+      throw new ApiError(401, 'Invalid credentials');
     }
 
-    // 2. Check password
     const isValid = await bcrypt.compare(password, user.password);
     if (!isValid) {
-      return res.status(401).json({ message: "Invalid credentials" });
+      throw new ApiError(401, 'Invalid credentials');
     }
 
-    // 3. Generate JWT
-    const token = await user.generateToken();
+    const token = user.generateToken();
+    user.tokens.push({ token });
+    await user.save();
 
-    // 4. Set cookie
-    res.cookie("userCookie", token, {
+    res.cookie('userCookie', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // only in production
-      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
-      maxAge: 1000 * 60 * 60, // 1 hour
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      maxAge: 1000 * 60 * 60,
     });
 
-    // 5. Send response
     res.status(200).json({
-      message: "Login successful",
-      user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
+      status: 'success',
+      data: {
+        message: 'Login successful',
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        },
       },
     });
-  } catch (err) {
-    console.error("Login error:", err);
-    res.status(500).json({ message: "Server error during login" });
+  } catch (error) {
+    next(error);
   }
 };
 
-const signupDefault = (req,res)=>{
-    res.status(200).json({"message":"Welcome to register page."});
+export const signupDefault = (req: Request, res: Response): void => {
+  res.status(200).json({
+    status: 'success',
+    data: { message: 'Welcome to register page.' },
+  });
 };
 
-const signup = async (req, res) => {
+export const signup = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { name, email, password } = req.body;
 
     if (!name || !email || !password) {
-      return res.status(400).json({ message: "All fields are required." });
+      throw new ApiError(400, 'All fields are required.');
     }
 
-    // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: "Email already exists." });
+      throw new ApiError(400, 'Email already exists.');
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create new user
-    const newUser = new User({
-      name,
-      email,
-      password: hashedPassword,
-    });
+    const newUser = new User({ name, email, password: hashedPassword });
 
     await newUser.save();
 
-    res.status(201).json({ message: "User registered successfully." });
+    res.status(201).json({
+      status: 'success',
+      data: { message: 'User registered successfully.' },
+    });
   } catch (error) {
-    console.error("Signup error:", error);
-    res.status(500).json({ message: "Internal Server Error" });
+    next(error);
   }
 };
-
-module.exports={
-    login,
-    signupDefault,
-    signup
-}
-
-

@@ -1,16 +1,22 @@
 "use strict";
-const mongoose = require('mongoose');
-const userFeedbackSchema = new mongoose.Schema({
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.UserFeedback = void 0;
+const mongoose_1 = require("mongoose");
+const userFeedbackSchema = new mongoose_1.Schema({
     userId: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: mongoose_1.Schema.Types.ObjectId,
         ref: 'User',
+        required: true,
     },
     userName: {
         type: String,
+        required: true,
+        trim: true,
     },
     feedbackText: {
         type: String,
         required: true,
+        trim: true,
     },
     rating: {
         type: Number,
@@ -21,9 +27,9 @@ const userFeedbackSchema = new mongoose.Schema({
     date: {
         type: Date,
         default: Date.now,
-    }
+    },
+}, {
+    timestamps: true,
 });
-// Create a model from the schema
-const UserFeedback = mongoose.model('UserFeedback', userFeedbackSchema);
-// Export the model
-module.exports = UserFeedback;
+exports.UserFeedback = (0, mongoose_1.model)('UserFeedback', userFeedbackSchema);
+exports.default = exports.UserFeedback;
