@@ -1,6 +1,8 @@
 # OneMinuteQuiz Backend
 
-OneMinuteQuiz Backend is a production-ready Node.js API built with TypeScript and Express, designed to support my quiz application with secure user authentication, feedback management, and admin analytics.
+OneMinuteQuiz Backend is a production-ready Node.js API built with TypeScript and Express, designed to support my quiz application with secure user authentication, feedback management, and admin analytics. <br>
+Live link of the frontend: https://one-minute-quiz-frontend.vercel.app/  <br>
+Github repository link of the frontend: https://github.com/Ahshan-Haquc/OneMinuteQuiz_Frontend
 
 ## Project Overview
 
@@ -62,3 +64,8 @@ Optional:
    npm run build
    npm start
    ```
+
+
+## Frontend Repository
+
+This frontend is connected with a separate React + TypeScript + Tailwind CSS + Shadcn/UI frontend. https://github.com/Ahshan-Haquc/OneMinuteQuiz_Frontend
