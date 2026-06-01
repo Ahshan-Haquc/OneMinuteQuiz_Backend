@@ -1,135 +1,137 @@
-const express = require('express');
-const router = express.Router();
-const User = require('../models/userSchema');
-const UserFeedback = require('../models/userFeedbackSchema');
-const userAccessPermission = require('../middleware/userAccessPermision'); 
-const mongoose = require('mongoose');
-const bcrypt = require("bcryptjs");
-const {
+import { Request, Response, Router } from 'express';
+import { Types } from 'mongoose';
+import bcrypt from 'bcryptjs';
+import {
   login,
+  signup,
   signupDefault,
-  signup
-} = require("../controllers/userController");
+} from '../controllers/userController';
+import { userAccessPermission } from '../middlewares/userAccessPermission';
+import { catchAsync } from '../utils/catchAsync';
+import User from '../models/userSchema';
+import UserFeedback from '../models/userFeedbackSchema';
+import { ApiError } from '../utils/ApiError';
 
-router.get("/",userAccessPermission,(req, res)=>{
-    res.status(200).json({"message":"Welcome to home page."});
-})
+type AuthRequest = Request & {
+  userInfo?: import('../models/userSchema').UserDocument;
+};
 
+const router = Router();
 
-router.post("/login", login);
-router.get("/signup", signupDefault);
-router.post("/signup", signup);
+router.get('/', userAccessPermission, (req, res) => {
+  res.status(200).json({ status: 'success', data: { message: 'Welcome to home page.' } });
+});
 
-//logout route
-router.get("/logout",userAccessPermission, async (req, res, next) => {
-    try {
-        // Clear the cookie by setting its expiration date to the past
-        res.cookie("userCookie", "", {
-            expires: new Date(Date.now() - 1000), // Set to a past date
-            httpOnly: true,
-            sameSite: 'Lax', // or 'None' for cross-site
-            secure: false,   // Set to true in production with HTTPS
-        });
+router.post('/login', catchAsync(login));
+router.get('/signup', signupDefault);
+router.post('/signup', catchAsync(signup));
 
-        // removing the token from the database
-        const user = await User.findById(req.userInfo._id);
-        if (!user) {
-            return res.status(404).json({"message":"User not found."});
-        }else{
-            user.tokens = [];
-        await user.save();
-        }
-
-        res.status(200).json({"message":"Logout successful."});
-
-
-    } catch (error) {
-        console.log("Error in logout get router.");
-        next(error);
+router.get(
+  '/logout',
+  userAccessPermission,
+  catchAsync(async (req, res: Response) => {
+    const authReq = req as AuthRequest;
+    if (!authReq.userInfo) {
+      throw new ApiError(401, 'Unauthorized access');
     }
+
+    authReq.userInfo.tokens = [];
+    await authReq.userInfo.save();
+
+    res.cookie('userCookie', '', {
+      expires: new Date(0),
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+    });
+
+    res.status(200).json({ status: 'success', data: { message: 'Logout successful.' } });
+  }),
+);
+
+router.get('/me', userAccessPermission, (req, res: Response) => {
+  const authReq = req as AuthRequest;
+  res.status(200).json({ status: 'success', data: { userInfo: authReq.userInfo, message: 'User information retrieved successfully.' } });
 });
 
-router.get("/me", userAccessPermission, (req, res) => {
-    res.status(200).json({userInfo: req.userInfo, message: "User information retrieved successfully."});
+router.get('/feedback', (req, res) => {
+  res.status(200).json({ status: 'success', data: { message: 'Welcome to feedback page.' } });
 });
 
+router.post(
+  '/feedback',
+  catchAsync(async (req, res) => {
+    const { userId, userName, feedbackText, rating } = req.body;
 
-//user feedback route
-router.get("/feedback",(req, res)=>{
-    res.status(200).json({"message":"Welcome to feedback page."});
-})
-
-router.post("/feedback", async (req,res,next)=>{
-    try {
-        const {userId, userName, feedbackText, rating} = req.body;
-        if(!userId || !userName || !feedbackText || !rating) {
-            return res.status(400).json({"message":"All fields are required."});
-        }else{
-            const newFeedback = new UserFeedback({
-                userId: new mongoose.Types.ObjectId(userId),
-                userName: userName,
-                feedbackText: feedbackText,
-                rating: rating
-            });
-            await newFeedback.save()
-            .catch((error) => {
-                return res.status(500).json({"message":"Internal Server Error"});
-            });
-            res.status(201).json({"message":"Feedback submitted successfully."});
-        }
-    } catch (error) {
-        console.log("Error in sending feedback post router.");
-        next(error);
+    if (!userId || !userName || !feedbackText || !rating) {
+      throw new ApiError(400, 'All fields are required.');
     }
-})
 
+    if (!Types.ObjectId.isValid(userId)) {
+      throw new ApiError(400, 'Invalid userId format.');
+    }
 
-//new section
-//----------------Admin routers----------------------------------
-// using this route i can create an admin, not using /signup route
-// and to create admin i have to run this in postman 
-// {
-//   "username": "admin1",
-//   "email": "admin@example.com",
-//   "password": "yourStrongPassword123",
-//   "secret": "your-secure-secret"
-// }
-// or i have to create a signup page only for admin which will hit in this route name
-router.post("/register-admin", async (req, res) => {
-  const { username, email, password, secret } = req.body;
+    const newFeedback = new UserFeedback({
+      userId: new Types.ObjectId(userId),
+      userName,
+      feedbackText,
+      rating,
+    });
 
-  // Validate secret (hardcoded or use .env)
-  if (secret !== process.env.ADMIN_CREATION_SECRET) {
-    return res.status(403).json({ message: "Unauthorized" });
-  }
+    await newFeedback.save();
 
-  const hashedPassword = await bcrypt.hash(password, 10);
+    res.status(201).json({ status: 'success', data: { message: 'Feedback submitted successfully.' } });
+  }),
+);
 
-  const admin = new User({
-    username,
-    email,
-    password: hashedPassword,
-    role: "admin"
-  });
+router.post(
+  '/register-admin',
+  catchAsync(async (req, res) => {
+    const { username, email, password, secret } = req.body;
 
-  await admin.save();
-  res.status(201).json({ message: "Admin created" });
-});
+    if (!username || !email || !password || !secret) {
+      throw new ApiError(400, 'All fields are required.');
+    }
 
-// load dashboard data
-router.get("/loadAdminDashboardValues", async (req, res, next) => {
-  try {
-    const ratingCount = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    if (secret !== process.env.ADMIN_CREATION_SECRET) {
+      throw new ApiError(403, 'Unauthorized');
+    }
 
-    const users = await User.find({ role: "user" });
-    const userFeedbacks = await UserFeedback.find({});
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const adminUser = new User({
+      name: username,
+      email,
+      password: hashedPassword,
+      role: 'admin',
+    });
+
+    await adminUser.save();
+
+    res.status(201).json({ status: 'success', data: { message: 'Admin created' } });
+  }),
+);
+
+router.get(
+  '/loadAdminDashboardValues',
+  catchAsync(async (req, res) => {
+    const ratingCount: Record<1 | 2 | 3 | 4 | 5, number> = {
+      5: 0,
+      4: 0,
+      3: 0,
+      2: 0,
+      1: 0,
+    };
+
+    const users = await User.find({ role: 'user' });
+    const userFeedbacks = await UserFeedback.find();
 
     const userCount = users.length;
     const feedbackCount = userFeedbacks.length;
 
-    userFeedbacks.forEach((data) => {
-      if (ratingCount[data.rating] !== undefined) {
-        ratingCount[data.rating] += 1;
+    userFeedbacks.forEach((feedback) => {
+      const feedbackRating = feedback.rating as 1 | 2 | 3 | 4 | 5;
+      if (feedbackRating >= 1 && feedbackRating <= 5) {
+        ratingCount[feedbackRating] += 1;
       }
     });
 
@@ -147,52 +149,50 @@ router.get("/loadAdminDashboardValues", async (req, res, next) => {
       ratingCount[2] +
       ratingCount[1];
 
-    const averageRating =
-      totalFeedbacks === 0 ? 0 : (totalRatings / totalFeedbacks).toFixed(2);
+    const averageRating = totalFeedbacks === 0 ? 0 : Number((totalRatings / totalFeedbacks).toFixed(2));
 
     res.status(200).json({
-      users,
-      userFeedbacks,
-      userCount,
-      feedbackCount,
-      ratingCount,
-      averageRating,
+      status: 'success',
+      data: {
+        users,
+        userFeedbacks,
+        userCount,
+        feedbackCount,
+        ratingCount,
+        averageRating,
+      },
     });
-  } catch (error) {
-    next(error);
-  }
-});
+  }),
+);
 
-
-//delete user
-router.post("/deleteUser", async(req,res,next)=>{
-    try {
-        const userId = new mongoose.Types.ObjectId(req.body.userId);
-        
-
-        await User.deleteOne({_id:userId});
-        const newUsers = await User.find({});
-
-
-        
-        res.status(200).json({newUsers: newUsers});
-    } catch (error) {
-        next(error);
+router.post(
+  '/deleteUser',
+  catchAsync(async (req, res) => {
+    const { userId } = req.body;
+    if (!userId || !Types.ObjectId.isValid(userId)) {
+      throw new ApiError(400, 'Invalid userId');
     }
-})
-//delete user feedback
-router.post("/deleteFeedback", async(req,res,next)=>{
-    try {
-        const userFeedbackId = new mongoose.Types.ObjectId(req.body.userFeedbackId);
 
-        await UserFeedback.deleteOne({_id:userFeedbackId});
-        const newFeedback = await UserFeedback.find({});
+    await User.deleteOne({ _id: new Types.ObjectId(userId) });
+    const newUsers = await User.find();
 
+    res.status(200).json({ status: 'success', data: { newUsers } });
+  }),
+);
 
-        res.status(200).json({newFeedback: newFeedback});
-    } catch (error) {
-        next(error);
+router.post(
+  '/deleteFeedback',
+  catchAsync(async (req, res) => {
+    const { userFeedbackId } = req.body;
+    if (!userFeedbackId || !Types.ObjectId.isValid(userFeedbackId)) {
+      throw new ApiError(400, 'Invalid userFeedbackId');
     }
-})
 
-module.exports = router;
+    await UserFeedback.deleteOne({ _id: new Types.ObjectId(userFeedbackId) });
+    const newFeedback = await UserFeedback.find();
+
+    res.status(200).json({ status: 'success', data: { newFeedback } });
+  }),
+);
+
+export default router;

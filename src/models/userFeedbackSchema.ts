@@ -1,31 +1,45 @@
-const mongoose = require('mongoose');
+import { Document, model, Schema, Types } from 'mongoose';
 
-const userFeedbackSchema = new mongoose.Schema({
-    userId:{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-    },
-    userName:{
-        type: String,
-    },
-    feedbackText:{
-        type: String,
-        required: true,
-    },
-    rating:{
-        type: Number,
-        min: 1,
-        max: 5,
-        required: true,
-    },
-    date:{
-        type: Date,
-        default: Date.now,
-    }
-});
+export interface UserFeedbackDocument extends Document {
+  userId: Types.ObjectId;
+  userName: string;
+  feedbackText: string;
+  rating: number;
+  date: Date;
+}
 
-// Create a model from the schema
-const UserFeedback = mongoose.model('UserFeedback', userFeedbackSchema);
+const userFeedbackSchema = new Schema<UserFeedbackDocument>(
+  {
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
+    userName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    feedbackText: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    rating: {
+      type: Number,
+      min: 1,
+      max: 5,
+      required: true,
+    },
+    date: {
+      type: Date,
+      default: Date.now,
+    },
+  },
+  {
+    timestamps: true,
+  },
+);
 
-// Export the model
-module.exports = UserFeedback;
+export const UserFeedback = model<UserFeedbackDocument>('UserFeedback', userFeedbackSchema);
+export default UserFeedback;

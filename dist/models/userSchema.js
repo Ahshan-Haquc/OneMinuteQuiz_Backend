@@ -1,17 +1,23 @@
 "use strict";
-const mongoose = require('mongoose');
-const dotenv = require('dotenv');
-dotenv.config();
-const jwt = require('jsonwebtoken');
-const userSchema = new mongoose.Schema({
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.User = void 0;
+const mongoose_1 = require("mongoose");
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const validateEnv_1 = require("../config/validateEnv");
+const userSchema = new mongoose_1.Schema({
     name: {
         type: String,
+        trim: true,
     },
     email: {
         type: String,
         required: true,
         unique: true,
         lowercase: true,
+        trim: true,
     },
     password: {
         type: String,
@@ -19,37 +25,32 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ["user", "admin"],
-        default: "user"
+        enum: ['user', 'admin'],
+        default: 'user',
     },
-    tokens: [{
+    tokens: [
+        {
             token: {
-                type: String
-            }
-        }],
+                type: String,
+                required: true,
+            },
+        },
+    ],
     registrationDate: {
         type: Date,
         default: Date.now,
-    }
+    },
+}, {
+    timestamps: true,
 });
-// Method to generate JWT token
 userSchema.methods.generateToken = function () {
-    try {
-        const userToken = jwt.sign({
-            _id: this._id.toString(),
-            role: this.role,
-            email: this.email
-        }, process.env.JWT_SECRET || 'ahsanSecretKey4356', {
-            expiresIn: process.env.JWT_EXPIRATION || '1h'
-        });
-        return userToken;
-    }
-    catch (error) {
-        console.error("Error generating token:", error);
-        throw new Error("Token generation failed");
-    }
+    const signOptions = { expiresIn: validateEnv_1.env.JWT_EXPIRATION };
+    const secretKey = validateEnv_1.env.JWT_SECRET;
+    return jsonwebtoken_1.default.sign({
+        _id: this._id.toString(),
+        role: this.role,
+        email: this.email,
+    }, secretKey, signOptions);
 };
-// Create a model from the schema
-const User = mongoose.model('User', userSchema);
-// Export the model
-module.exports = User;
+exports.User = (0, mongoose_1.model)('User', userSchema);
+exports.default = exports.User;

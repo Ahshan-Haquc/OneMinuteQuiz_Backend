@@ -1,45 +1,27 @@
 "use strict";
-const express = require('express');
-const app = express();
-const allRouters = require('./routes/allRouters');
-const userSchema = require('./models/userSchema');
-const dotenv = require('dotenv');
-const mongoose = require('mongoose');
-const mongodbConnect = require('./config/db');
-const cookieParser = require('cookie-parser');
-const cors = require('cors');
-dotenv.config();
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
-app.set("trust proxy", 1);
-app.use(cors({
-    origin: [
-        "http://localhost:5173",
-        "https://1-minute-quiz.vercel.app"
-    ],
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-    allowedHeaders: ["Content-Type", "Authorization"]
-}));
-// MongoDB connection
-mongodbConnect();
-// accessing router
-app.use('/', allRouters);
-// default error handler
-const errorHandler = (err, req, res, next) => {
-    if (res.headersSent) {
-        return next(err);
-    }
-    res.json({
-        status: "error",
-        message: err.message || "Internal Server Error",
-        error: err,
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const app_1 = __importDefault(require("./app"));
+const db_1 = require("./config/db");
+const validateEnv_1 = require("./config/validateEnv");
+const startServer = async () => {
+    await (0, db_1.connectDB)(validateEnv_1.env.MONGODB_CONNECTION_STRING_URI);
+    const port = validateEnv_1.env.PORT;
+    app_1.default.listen(port, () => {
+        console.log(`Server is running on port ${port}`);
     });
 };
-app.use(errorHandler);
-// start server 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+process.on('uncaughtException', (error) => {
+    console.error('Uncaught Exception:', error);
+    process.exit(1);
+});
+process.on('unhandledRejection', (reason) => {
+    console.error('Unhandled Rejection:', reason);
+    process.exit(1);
+});
+startServer().catch((error) => {
+    console.error('Failed to start server:', error);
+    process.exit(1);
 });

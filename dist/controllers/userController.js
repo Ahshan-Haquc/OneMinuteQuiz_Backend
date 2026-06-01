@@ -1,88 +1,80 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-const User = require('../models/userSchema');
-const UserFeedback = require('../models/userFeedbackSchema');
-const userAccessPermission = require('../middleware/userAccessPermision');
-const mongoose = require('mongoose');
-const bcrypt = require("bcryptjs");
-const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.signup = exports.signupDefault = exports.login = void 0;
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
+const userSchema_1 = __importDefault(require("../models/userSchema"));
+const ApiError_1 = require("../utils/ApiError");
+const login = async (req, res, next) => {
     try {
         const { email, password } = req.body;
-        // 1. Find user
-        const user = yield User.findOne({ email });
+        if (!email || !password) {
+            throw new ApiError_1.ApiError(400, 'Email and password are required.');
+        }
+        const user = await userSchema_1.default.findOne({ email });
         if (!user) {
-            return res.status(401).json({ message: "Invalid credentials" });
+            throw new ApiError_1.ApiError(401, 'Invalid credentials');
         }
-        // 2. Check password
-        const isValid = yield bcrypt.compare(password, user.password);
+        const isValid = await bcryptjs_1.default.compare(password, user.password);
         if (!isValid) {
-            return res.status(401).json({ message: "Invalid credentials" });
+            throw new ApiError_1.ApiError(401, 'Invalid credentials');
         }
-        // 3. Generate JWT
-        const token = yield user.generateToken();
-        // 4. Set cookie
-        res.cookie("userCookie", token, {
+        const token = user.generateToken();
+        user.tokens.push({ token });
+        await user.save();
+        res.cookie('userCookie', token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production", // only in production
-            sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
-            maxAge: 1000 * 60 * 60, // 1 hour
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+            maxAge: 1000 * 60 * 60,
         });
-        // 5. Send response
         res.status(200).json({
-            message: "Login successful",
-            user: {
-                _id: user._id,
-                name: user.name,
-                email: user.email,
-                role: user.role,
+            status: 'success',
+            data: {
+                message: 'Login successful',
+                user: {
+                    _id: user._id,
+                    name: user.name,
+                    email: user.email,
+                    role: user.role,
+                },
             },
         });
     }
-    catch (err) {
-        console.error("Login error:", err);
-        res.status(500).json({ message: "Server error during login" });
+    catch (error) {
+        next(error);
     }
-});
-const signupDefault = (req, res) => {
-    res.status(200).json({ "message": "Welcome to register page." });
 };
-const signup = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.login = login;
+const signupDefault = (req, res) => {
+    res.status(200).json({
+        status: 'success',
+        data: { message: 'Welcome to register page.' },
+    });
+};
+exports.signupDefault = signupDefault;
+const signup = async (req, res, next) => {
     try {
         const { name, email, password } = req.body;
         if (!name || !email || !password) {
-            return res.status(400).json({ message: "All fields are required." });
+            throw new ApiError_1.ApiError(400, 'All fields are required.');
         }
-        // Check if user already exists
-        const existingUser = yield User.findOne({ email });
+        const existingUser = await userSchema_1.default.findOne({ email });
         if (existingUser) {
-            return res.status(400).json({ message: "Email already exists." });
+            throw new ApiError_1.ApiError(400, 'Email already exists.');
         }
-        // Hash password
-        const hashedPassword = yield bcrypt.hash(password, 10);
-        // Create new user
-        const newUser = new User({
-            name,
-            email,
-            password: hashedPassword,
+        const hashedPassword = await bcryptjs_1.default.hash(password, 10);
+        const newUser = new userSchema_1.default({ name, email, password: hashedPassword });
+        await newUser.save();
+        res.status(201).json({
+            status: 'success',
+            data: { message: 'User registered successfully.' },
         });
-        yield newUser.save();
-        res.status(201).json({ message: "User registered successfully." });
     }
     catch (error) {
-        console.error("Signup error:", error);
-        res.status(500).json({ message: "Internal Server Error" });
+        next(error);
     }
-});
-module.exports = {
-    login,
-    signupDefault,
-    signup
 };
+exports.signup = signup;
