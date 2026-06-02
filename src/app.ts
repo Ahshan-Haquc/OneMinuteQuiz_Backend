@@ -7,6 +7,7 @@ import { errorHandler } from './middlewares/errorHandler';
 import { validateEnv } from './config/validateEnv';
 import authRoutes from './routes/authRoutes';
 import feedbackRoutes from './routes/feedbackRoutes';
+import adminRoutes from './routes/adminRoutes';
 
 validateEnv();
 
