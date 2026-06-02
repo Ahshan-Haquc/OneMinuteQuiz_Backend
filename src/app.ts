@@ -5,6 +5,8 @@ import allRoutes from './routes/allRoutes';
 import { notFoundHandler } from './middlewares/notFound';
 import { errorHandler } from './middlewares/errorHandler';
 import { validateEnv } from './config/validateEnv';
+import authRoutes from './routes/authRoutes';
+import feedbackRoutes from './routes/feedbackRoutes';
 
 validateEnv();
 
@@ -29,6 +31,9 @@ app.use(
 );
 
 app.use('/', allRoutes);
+app.use('/api/v1/auth', authRoutes);
+// app.use('/api/v1/quiz', quizRoutes);
+app.use('/api/v1/feedback', feedbackRoutes);
 app.use(notFoundHandler);
 app.use(errorHandler);
 

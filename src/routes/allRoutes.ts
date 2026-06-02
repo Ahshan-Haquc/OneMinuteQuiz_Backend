@@ -17,36 +17,6 @@ router.get('/', userAccessPermission, (req, res) => {
   res.status(200).json({ status: 'success', data: { message: 'Welcome to home page.' } });
 });
 
-router.get('/feedback', (req, res) => {
-  res.status(200).json({ status: 'success', data: { message: 'Welcome to feedback page.' } });
-});
-
-router.post(
-  '/feedback',
-  catchAsync(async (req, res) => {
-    const { userId, userName, feedbackText, rating } = req.body;
-
-    if (!userId || !userName || !feedbackText || !rating) {
-      throw new ApiError(400, 'All fields are required.');
-    }
-
-    if (!Types.ObjectId.isValid(userId)) {
-      throw new ApiError(400, 'Invalid userId format.');
-    }
-
-    const newFeedback = new UserFeedback({
-      userId: new Types.ObjectId(userId),
-      userName,
-      feedbackText,
-      rating,
-    });
-
-    await newFeedback.save();
-
-    res.status(201).json({ status: 'success', data: { message: 'Feedback submitted successfully.' } });
-  }),
-);
-
 router.post(
   '/register-admin',
   catchAsync(async (req, res) => {
