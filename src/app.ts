@@ -20,7 +20,7 @@ app.use(
   cors({
     origin: [
       'http://localhost:5173',
-      'https://1-minute-quiz.vercel.app',
+      'https://one-minute-quiz-frontend.vercel.app',
     ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],

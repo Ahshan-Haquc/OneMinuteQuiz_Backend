@@ -3,6 +3,10 @@ import bcrypt from 'bcryptjs';
 import User from '../models/userSchema';
 import { ApiError } from '../utils/ApiError';
 
+type AuthRequest = Request & {
+  userInfo?: import('../models/userSchema').UserDocument;
+};
+
 export const login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { email, password } = req.body;
@@ -82,3 +86,32 @@ export const signup = async (req: Request, res: Response, next: NextFunction): P
     next(error);
   }
 };
+
+export const logout = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const authReq = req as AuthRequest;
+    if (!authReq.userInfo) {
+      throw new ApiError(401, 'Unauthorized access');
+    }
+
+    authReq.userInfo.tokens = [];
+    await authReq.userInfo.save();
+
+    res.cookie('userCookie', '', {
+      expires: new Date(0),
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+    });
+
+    res.status(200).json({ status: 'success', data: { message: 'Logout successful.' } });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export const checkMe = async (req: Request, res: Response) => {
+  const authReq = req as AuthRequest;
+  res.status(200).json({ status: 'success', data: { userInfo: authReq.userInfo, message: 'User information retrieved successfully.' } });
+}
+  

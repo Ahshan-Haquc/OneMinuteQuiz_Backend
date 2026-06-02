@@ -1,11 +1,6 @@
 import { Request, Response, Router } from 'express';
 import { Types } from 'mongoose';
 import bcrypt from 'bcryptjs';
-import {
-  login,
-  signup,
-  signupDefault,
-} from '../controllers/userController';
 import { userAccessPermission } from '../middlewares/userAccessPermission';
 import { catchAsync } from '../utils/catchAsync';
 import User from '../models/userSchema';
@@ -20,38 +15,6 @@ const router = Router();
 
 router.get('/', userAccessPermission, (req, res) => {
   res.status(200).json({ status: 'success', data: { message: 'Welcome to home page.' } });
-});
-
-router.post('/login', catchAsync(login));
-router.get('/signup', signupDefault);
-router.post('/signup', catchAsync(signup));
-
-router.get(
-  '/logout',
-  userAccessPermission,
-  catchAsync(async (req, res: Response) => {
-    const authReq = req as AuthRequest;
-    if (!authReq.userInfo) {
-      throw new ApiError(401, 'Unauthorized access');
-    }
-
-    authReq.userInfo.tokens = [];
-    await authReq.userInfo.save();
-
-    res.cookie('userCookie', '', {
-      expires: new Date(0),
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
-    });
-
-    res.status(200).json({ status: 'success', data: { message: 'Logout successful.' } });
-  }),
-);
-
-router.get('/me', userAccessPermission, (req, res: Response) => {
-  const authReq = req as AuthRequest;
-  res.status(200).json({ status: 'success', data: { userInfo: authReq.userInfo, message: 'User information retrieved successfully.' } });
 });
 
 router.get('/feedback', (req, res) => {

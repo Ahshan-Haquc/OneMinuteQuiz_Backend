@@ -18,7 +18,7 @@ const missingEnvError = (key: string): never => {
 
 export const validateEnv = (): EnvConfig => {
   const nodeEnv = process.env.NODE_ENV ?? 'development';
-  const port = Number(process.env.PORT ?? 3000);
+  const port = Number(process.env.PORT ?? 3001);
   const jwtSecret = process.env.JWT_SECRET ?? missingEnvError('JWT_SECRET');
   const jwtExpiration = process.env.JWT_EXPIRATION ?? '1h';
   const mongoUri = process.env.MONGODB_CONNECTION_STRING_URI ?? missingEnvError('MONGODB_CONNECTION_STRING_URI');
