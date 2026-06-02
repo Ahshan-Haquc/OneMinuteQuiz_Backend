@@ -1,13 +1,13 @@
 import express, { json, urlencoded } from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import allRoutes from './routes/allRoutes';
 import { notFoundHandler } from './middlewares/notFound';
 import { errorHandler } from './middlewares/errorHandler';
 import { validateEnv } from './config/validateEnv';
 import authRoutes from './routes/authRoutes';
 import feedbackRoutes from './routes/feedbackRoutes';
 import adminRoutes from './routes/adminRoutes';
+import quizRoutes from './routes/quizRoutes';
 
 validateEnv();
 
@@ -31,10 +31,9 @@ app.use(
   }),
 );
 
-app.use('/', allRoutes);
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/admin', adminRoutes);
-// app.use('/api/v1/quiz', quizRoutes);
+app.use('/api/v1/quiz', quizRoutes);
 app.use('/api/v1/feedback', feedbackRoutes);
 
 app.use(notFoundHandler);
