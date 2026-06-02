@@ -32,8 +32,10 @@ app.use(
 
 app.use('/', allRoutes);
 app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/admin', adminRoutes);
 // app.use('/api/v1/quiz', quizRoutes);
 app.use('/api/v1/feedback', feedbackRoutes);
+
 app.use(notFoundHandler);
 app.use(errorHandler);
 

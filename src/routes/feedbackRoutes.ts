@@ -1,10 +1,5 @@
-import { Request, Response, Router } from 'express';
-import bcrypt from 'bcryptjs';
-import { userAccessPermission } from '../middlewares/userAccessPermission';
+import { Request, Router } from 'express';
 import { catchAsync } from '../utils/catchAsync';
-import User from '../models/userSchema';
-import UserFeedback from '../models/userFeedbackSchema';
-import { ApiError } from '../utils/ApiError';
 import { deleteAllFeedback, deleteFeedbackById, getAllFeedback, sentFeedback } from '../controllers/feedbackController';
 
 type AuthRequest = Request & {

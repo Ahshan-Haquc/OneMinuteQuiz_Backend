@@ -4,7 +4,8 @@ import {
   signup,
   signupDefault,
   logout,
-  checkMe
+  checkMe,
+  registerAdmin
 } from '../controllers/authController';
 import { userAccessPermission } from '../middlewares/userAccessPermission';
 import { catchAsync } from '../utils/catchAsync';
@@ -16,5 +17,6 @@ router.get('/signup', signupDefault);
 router.post('/signup', catchAsync(signup));
 router.get('/logout', userAccessPermission, catchAsync(logout));
 router.get('/me', userAccessPermission, catchAsync(checkMe));
+router.post('/register-admin', catchAsync(registerAdmin));
 
 export default router;

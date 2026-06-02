@@ -17,33 +17,6 @@ router.get('/', userAccessPermission, (req, res) => {
   res.status(200).json({ status: 'success', data: { message: 'Welcome to home page.' } });
 });
 
-router.post(
-  '/register-admin',
-  catchAsync(async (req, res) => {
-    const { username, email, password, secret } = req.body;
-
-    if (!username || !email || !password || !secret) {
-      throw new ApiError(400, 'All fields are required.');
-    }
-
-    if (secret !== process.env.ADMIN_CREATION_SECRET) {
-      throw new ApiError(403, 'Unauthorized');
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const adminUser = new User({
-      name: username,
-      email,
-      password: hashedPassword,
-      role: 'admin',
-    });
-
-    await adminUser.save();
-
-    res.status(201).json({ status: 'success', data: { message: 'Admin created' } });
-  }),
-);
-
 router.get(
   '/loadAdminDashboardValues',
   catchAsync(async (req, res) => {

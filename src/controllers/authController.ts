@@ -114,4 +114,27 @@ export const checkMe = async (req: Request, res: Response) => {
   const authReq = req as AuthRequest;
   res.status(200).json({ status: 'success', data: { userInfo: authReq.userInfo, message: 'User information retrieved successfully.' } });
 }
-  
+
+export const registerAdmin = async (req: Request, res: Response) => {
+  const { username, email, password, secret } = req.body;
+
+  if (!username || !email || !password || !secret) {
+    throw new ApiError(400, 'All fields are required.');
+  }
+
+  if (secret !== process.env.ADMIN_CREATION_SECRET) {
+    throw new ApiError(403, 'Unauthorized');
+  }
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const adminUser = new User({
+    name: username,
+    email,
+    password: hashedPassword,
+    role: 'admin',
+  });
+
+  await adminUser.save();
+
+  res.status(201).json({ status: 'success', data: { message: 'Admin created' } });
+}
