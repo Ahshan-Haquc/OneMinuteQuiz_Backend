@@ -70,7 +70,6 @@ export const updateHighestScore = async (req: Request, res: Response) => {
 
 }
 
-
 export const updateTotalPlayCount = async (req: Request, res: Response) => {
     const { quizName } = req.params;
     if (!quizName) {
