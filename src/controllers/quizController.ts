@@ -98,3 +98,34 @@ export const updateTotalPlayCount = async (req: Request, res: Response) => {
     });
 }
 
+export const updateRating = async (req: Request, res: Response) => {
+    const { quizName } = req.params;
+    const { rating } = req.body;
+    if (!quizName) {
+        throw new ApiError(400, 'Quiz name is required.');
+    }
+    if (!rating) {
+        throw new ApiError(400, 'Rating is required.');
+    }
+    const quizNameField = `total${quizName}GameRating`;
+
+    const quiz = await QuizTracking.findOne();
+    if (!quiz) {
+        throw new ApiError(404, 'Quiz not found.');
+    }
+
+    const previousRating = quizName === 'GuessTheWord' ? quiz.totalGuessTheWordGameRating : quizName === 'QuickCalculate' ? quiz.totalQuickCalculateGameRating : quizName === 'MemoryFlash' ? quiz.totalMemoryFlashGameRating : quiz.totalTargetClickerGameRating;
+    
+    const newRating = (previousRating + rating) / 2;
+
+    await QuizTracking.findOneAndUpdate(
+        {},
+        { [quizNameField]: newRating },
+        { new: true }
+    );
+    res.status(200).json({
+        status: 'success',
+        message: 'Thanks for your rating.',
+    });
+
+}
