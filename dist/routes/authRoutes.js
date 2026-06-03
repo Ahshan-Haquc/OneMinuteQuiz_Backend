@@ -1,0 +1,14 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const authController_1 = require("../controllers/authController");
+const userAccessPermission_1 = require("../middlewares/userAccessPermission");
+const catchAsync_1 = require("../utils/catchAsync");
+const router = (0, express_1.Router)();
+router.post('/login', (0, catchAsync_1.catchAsync)(authController_1.login));
+router.get('/signup', authController_1.signupDefault);
+router.post('/signup', (0, catchAsync_1.catchAsync)(authController_1.signup));
+router.get('/logout', userAccessPermission_1.userAccessPermission, (0, catchAsync_1.catchAsync)(authController_1.logout));
+router.get('/me', userAccessPermission_1.userAccessPermission, (0, catchAsync_1.catchAsync)(authController_1.checkMe));
+router.post('/register-admin', (0, catchAsync_1.catchAsync)(authController_1.registerAdmin));
+exports.default = router;

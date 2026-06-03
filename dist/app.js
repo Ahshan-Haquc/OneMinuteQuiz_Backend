@@ -39,10 +39,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importStar(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
-const allRoutes_1 = __importDefault(require("./routes/allRoutes"));
 const notFound_1 = require("./middlewares/notFound");
 const errorHandler_1 = require("./middlewares/errorHandler");
 const validateEnv_1 = require("./config/validateEnv");
+const authRoutes_1 = __importDefault(require("./routes/authRoutes"));
+const feedbackRoutes_1 = __importDefault(require("./routes/feedbackRoutes"));
+const adminRoutes_1 = __importDefault(require("./routes/adminRoutes"));
+const quizRoutes_1 = __importDefault(require("./routes/quizRoutes"));
 (0, validateEnv_1.validateEnv)();
 const app = (0, express_1.default)();
 app.use((0, express_1.json)());
@@ -52,13 +55,16 @@ app.set('trust proxy', 1);
 app.use((0, cors_1.default)({
     origin: [
         'http://localhost:5173',
-        'https://1-minute-quiz.vercel.app',
+        'https://one-minute-quiz-frontend.vercel.app',
     ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization'],
 }));
-app.use('/', allRoutes_1.default);
+app.use('/api/v1/auth', authRoutes_1.default);
+app.use('/api/v1/admin', adminRoutes_1.default);
+app.use('/api/v1/quiz', quizRoutes_1.default);
+app.use('/api/v1/feedback', feedbackRoutes_1.default);
 app.use(notFound_1.notFoundHandler);
 app.use(errorHandler_1.errorHandler);
 exports.default = app;

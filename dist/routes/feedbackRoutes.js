@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const catchAsync_1 = require("../utils/catchAsync");
+const feedbackController_1 = require("../controllers/feedbackController");
+const router = (0, express_1.Router)();
+router.get('/getAllFeedback', (0, catchAsync_1.catchAsync)(feedbackController_1.getAllFeedback));
+router.post('/sentFeedback', (0, catchAsync_1.catchAsync)(feedbackController_1.sentFeedback));
+router.delete('/deleteFeedbackById/:feedbackId', feedbackController_1.deleteFeedbackById);
+router.delete('/deleteAllFeedback', feedbackController_1.deleteAllFeedback);
+exports.default = router;

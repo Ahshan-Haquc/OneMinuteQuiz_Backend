@@ -23,7 +23,27 @@ export const getLandingPageData = async (req: Request, res: Response) => {
 }
 
 export const getTopThreeHighestScores = async (req: Request, res: Response) => {
+    const { quizName } = req.params;
+    if (!quizName) {
+        throw new ApiError(400, 'Quiz name is required.');
+    }
+    const fieldName = `${quizName}TopThreeScores`;
 
+    // const quiz = await QuizTracking.findOne(
+    //     {},
+    //     { fieldName: 1, _id: 0 }
+    // );
+    const quiz = await QuizTracking.findOne().select(`${fieldName} -_id`);
+
+    if (!quiz) {
+        throw new ApiError(404, 'Quiz not found.');
+    }
+
+    res.status(200).json({
+        status: 'success',
+        message: 'Top three highest scores retrieved successfully.',
+        data: quiz
+    });
 }
 
 export const updateHighestScore = async (req: Request, res: Response) => {
@@ -77,10 +97,10 @@ export const updateTotalPlayCount = async (req: Request, res: Response) => {
     }
 
     let convertedName = '';
-    for(let i=0;i<quizName.length;i++){
-        if(i===0){
+    for (let i = 0; i < quizName.length; i++) {
+        if (i === 0) {
             convertedName += quizName[i].toUpperCase();
-        }else{
+        } else {
             convertedName += quizName[i];
         }
     }
@@ -114,7 +134,7 @@ export const updateRating = async (req: Request, res: Response) => {
     }
 
     const previousRating = quizName === 'GuessTheWord' ? quiz.totalGuessTheWordGameRating : quizName === 'QuickCalculate' ? quiz.totalQuickCalculateGameRating : quizName === 'MemoryFlash' ? quiz.totalMemoryFlashGameRating : quiz.totalTargetClickerGameRating;
-    
+
     const newRating = (previousRating + rating) / 2;
 
     await QuizTracking.findOneAndUpdate(
