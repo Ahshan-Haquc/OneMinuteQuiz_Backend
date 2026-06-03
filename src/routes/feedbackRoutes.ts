@@ -8,7 +8,7 @@ type AuthRequest = Request & {
 
 const router = Router();
 
-router.get('/getAllFeedback', catchAsync(getAllFeedback));
+router.get('/getAllFeedback/:page', catchAsync(getAllFeedback));
 
 router.post('/sentFeedback', catchAsync(sentFeedback));
 

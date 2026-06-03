@@ -3,8 +3,18 @@ import { ApiError } from '../utils/ApiError';
 import UserFeedback from '../models/userFeedbackSchema';
 
 export const getAllFeedback = async (req: Request, res: Response) => {
-    const result = await UserFeedback.find();
-    res.status(200).json({ status: 'success', data: result, message: 'Get all feedback successfully.' });
+    const { page } = req.params;
+    const parsedPage = parseInt(page as string) || 1;
+    const limit = 10;
+    const skip = (parsedPage - 1) * limit;
+    const result = await UserFeedback.find().skip(skip).limit(limit);
+    const total = await UserFeedback.countDocuments();
+    res.status(200).json({ 
+        status: 'success', 
+        message: 'Get all feedback successfully.' ,
+        data: result, 
+        meta: {total, showing: result.length, page: parsedPage, limit }
+    });
 }
 
 
