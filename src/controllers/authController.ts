@@ -45,6 +45,7 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
           name: user.name,
           email: user.email,
           role: user.role,
+          accessToken: token,
         },
       },
     });
@@ -116,9 +117,9 @@ export const checkMe = async (req: Request, res: Response) => {
 }
 
 export const registerAdmin = async (req: Request, res: Response) => {
-  const { username, email, password, secret } = req.body;
+  const { name, email, password, secret } = req.body;
 
-  if (!username || !email || !password || !secret) {
+  if (!name || !email || !password || !secret) {
     throw new ApiError(400, 'All fields are required.');
   }
 
@@ -128,7 +129,7 @@ export const registerAdmin = async (req: Request, res: Response) => {
 
   const hashedPassword = await bcrypt.hash(password, 10);
   const adminUser = new User({
-    name: username,
+    name,
     email,
     password: hashedPassword,
     role: 'admin',

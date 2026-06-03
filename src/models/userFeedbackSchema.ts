@@ -10,16 +10,6 @@ export interface UserFeedbackDocument extends Document {
 
 const userFeedbackSchema = new Schema<UserFeedbackDocument>(
   {
-    userId: {
-      type: Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
-    },
-    userName: {
-      type: String,
-      required: true,
-      trim: true,
-    },
     feedbackText: {
       type: String,
       required: true,
@@ -30,15 +20,11 @@ const userFeedbackSchema = new Schema<UserFeedbackDocument>(
       min: 1,
       max: 5,
       required: true,
-    },
-    date: {
-      type: Date,
-      default: Date.now,
-    },
+    }
   },
   {
     timestamps: true,
-  },
+  }
 );
 
 export const UserFeedback = model<UserFeedbackDocument>('UserFeedback', userFeedbackSchema);

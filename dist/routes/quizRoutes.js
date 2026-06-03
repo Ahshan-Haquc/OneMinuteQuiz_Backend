@@ -5,7 +5,7 @@ const quizController_1 = require("../controllers/quizController");
 const catchAsync_1 = require("../utils/catchAsync");
 const router = (0, express_1.Router)();
 router.get('/getLandingPageData', quizController_1.getLandingPageData);
-router.get('/getTopThreeHighestScores/:quizName', quizController_1.getTopThreeHighestScores);
+router.get('/getTopThreeHighestScores/:quizName', (0, catchAsync_1.catchAsync)(quizController_1.getTopThreeHighestScores));
 router.patch('/updateHighestScore/:quizName', quizController_1.updateHighestScore);
 router.patch('/updateTotalPlayCount/:quizName', (0, catchAsync_1.catchAsync)(quizController_1.updateTotalPlayCount));
 router.patch('/updateRating/:quizName', (0, catchAsync_1.catchAsync)(quizController_1.updateRating));

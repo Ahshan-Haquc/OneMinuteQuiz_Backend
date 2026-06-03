@@ -26,6 +26,24 @@ const getLandingPageData = async (req, res) => {
 };
 exports.getLandingPageData = getLandingPageData;
 const getTopThreeHighestScores = async (req, res) => {
+    const { quizName } = req.params;
+    if (!quizName) {
+        throw new ApiError_1.ApiError(400, 'Quiz name is required.');
+    }
+    const fieldName = `${quizName}TopThreeScores`;
+    // const quiz = await QuizTracking.findOne(
+    //     {},
+    //     { fieldName: 1, _id: 0 }
+    // );
+    const quiz = await quizTrackingSchema_1.default.findOne().select(`${fieldName} -_id`);
+    if (!quiz) {
+        throw new ApiError_1.ApiError(404, 'Quiz not found.');
+    }
+    res.status(200).json({
+        status: 'success',
+        message: 'Top three highest scores retrieved successfully.',
+        data: quiz
+    });
 };
 exports.getTopThreeHighestScores = getTopThreeHighestScores;
 const updateHighestScore = async (req, res) => {
