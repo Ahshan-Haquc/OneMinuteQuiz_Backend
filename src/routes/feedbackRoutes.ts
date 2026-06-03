@@ -10,10 +10,10 @@ const router = Router();
 
 router.get('/getAllFeedback', catchAsync(getAllFeedback));
 
-router.post('/sentFeedback',catchAsync(sentFeedback));
+router.post('/sentFeedback', catchAsync(sentFeedback));
 
-router.delete('/deleteFeedbackById/:feedbackId',deleteFeedbackById);
+router.delete('/deleteFeedbackById/:feedbackId', catchAsync(deleteFeedbackById));
 
-router.delete('/deleteAllFeedback',deleteAllFeedback);
+router.delete('/deleteAllFeedback', catchAsync(deleteAllFeedback));
 
 export default router;
