@@ -33,7 +33,7 @@ This backend provides:
 - Feedback creation and validation with rating support
 - Admin dashboard endpoints for user and feedback overview
 - Delete user and delete feedback operations for admin control
-- Central validation for required environment variables
+- Central validation for required environment variables.
 
 
 ## Environment Variables
